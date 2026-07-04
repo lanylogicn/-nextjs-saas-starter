@@ -362,7 +362,7 @@ export default function BuyerPage() {
                 className="mt-1"
                 rows={4}
               />
-              <p className="text-xs text-stone-400 mt-1">驳回后进度将回退到"制作中"</p>
+              <p className="text-xs text-stone-400 mt-1">驳回后进度将回退到&ldquo;制作中&rdquo;</p>
             </div>
           )}
           {reviewAction === 'approve' && (

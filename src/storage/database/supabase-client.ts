@@ -29,8 +29,11 @@ function loadEnv(): void {
   }
 
   try {
+    // Dynamic import for dotenv (ESM compatible) - use sync require via createRequire
     try {
-      require('dotenv').config();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const dotenv = require('dotenv');
+      dotenv.config();
       if (process.env.COZE_SUPABASE_URL && process.env.COZE_SUPABASE_ANON_KEY) {
         envLoaded = true;
         return;
@@ -114,7 +117,7 @@ function getSupabaseClient(token?: string): SupabaseClient {
     key = serviceRoleKey ?? anonKey;
   }
 
-  const globalOptions: Record<string, any> = {};
+  const globalOptions: Record<string, unknown> = {};
   if (token) {
     globalOptions.headers = { Authorization: `Bearer ${token}` };
   }

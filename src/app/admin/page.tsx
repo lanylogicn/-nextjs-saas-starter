@@ -911,7 +911,7 @@ export default function AdminPage() {
             <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg text-indigo-800">联系方式配置</CardTitle>
-                <CardDescription>修改前端"联系我们"弹窗显示的联系方式信息</CardDescription>
+                <CardDescription>修改前端&ldquo;联系我们&rdquo;弹窗显示的联系方式信息</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -1022,7 +1022,7 @@ export default function AdminPage() {
                       <Button size="sm" variant="outline" onClick={() => handleSaveQuestion({ ...q, options: q.options || [] })}>保存修改</Button>
                     </div>
                   ))}
-                  {surveyQuestions.length === 0 && <p className="text-center text-stone-400 py-8">暂无题目，点击上方"新增题目"添加</p>}
+                  {surveyQuestions.length === 0 && <p className="text-center text-stone-400 py-8">暂无题目，点击上方&ldquo;新增题目&rdquo;添加</p>}
                 </div>
               </CardContent>
             </Card>
