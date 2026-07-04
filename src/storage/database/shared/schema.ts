@@ -252,6 +252,11 @@ export const deliveryReports = pgTable("delivery_reports", {
   notarization_no: varchar("notarization_no", { length: 50 }).notNull().unique(),
   verify_token: varchar("verify_token", { length: 100 }).notNull().unique().default(sql`encode(gen_random_bytes(16), 'hex')`),
   summary: text("summary"),
+  // P0 升级字段
+  ai_detection_status: varchar("ai_detection_status", { length: 20 }).default("pending"), // passed | pending | failed
+  ai_detection_result: jsonb("ai_detection_result"), // AI 检测结果详情
+  checklist_completed: jsonb("checklist_completed"), // 品类清单已完成项 ID 数组
+  copyright_declaration: jsonb("copyright_declaration"), // 版权声明数据
   generated_at: timestamp("generated_at", { withTimezone: true }).defaultNow().notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [

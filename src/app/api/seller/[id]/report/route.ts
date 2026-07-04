@@ -153,6 +153,11 @@ export async function GET(
         verify_token: existingReport.verify_token,
         summary: existingReport.summary,
         generated_at: existingReport.generated_at,
+        // P0 升级字段
+        ai_detection_status: existingReport.ai_detection_status,
+        ai_detection_result: existingReport.ai_detection_result,
+        checklist_completed: existingReport.checklist_completed,
+        copyright_declaration: existingReport.copyright_declaration,
       },
       timeline: timelineLogs || [],
     });

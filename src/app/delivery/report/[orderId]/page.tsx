@@ -1,8 +1,8 @@
 /**
  * 专业交付报告页面
  * 路由：/delivery/report/[orderId]
- * 功能：显示完整交付报告（全流程时间轴、审核记录、修改记录、交付小结、公证编号、查验二维码）
- * API：GET /api/seller/[sellerId]/report（需从订单获取sellerId）
+ * 功能：显示完整交付报告（全流程时间轴、审核记录、交付小结、公证编号、查验二维码）
+ * P0 升级：集成品类化交付清单、AI 原创性检测、版权声明
  */
 'use client';
 
@@ -10,6 +10,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
+import { CategoryChecklistDisplay } from '@/components/delivery/category-checklist';
+import { AIDetectionReport, type AIDetectionData } from '@/components/delivery/ai-detection-report';
+import { CopyrightNotice, type CopyrightDeclaration } from '@/components/delivery/copyright-notice';
 
 interface ReportData {
   order: {
@@ -21,6 +24,7 @@ interface ReportData {
     estimated_delivery: string | null;
     seller_nickname: string;
     seller_id?: string;
+    buyer_nickname?: string;
   };
   progress_logs: Array<{
     id: string;
@@ -36,6 +40,11 @@ interface ReportData {
     verify_token: string;
     summary: string;
     generated_at: string;
+    // P0 升级字段
+    ai_detection_status?: string;
+    ai_detection_result?: AIDetectionData;
+    checklist_completed?: string[];
+    copyright_declaration?: CopyrightDeclaration;
   };
 }
 
@@ -120,6 +129,11 @@ export default function DeliveryReportPage() {
   const reviewLogs = data.progress_logs.filter((l: { action: string }) => l.action === 'approve' || l.action === 'reject');
   const rejectCount = data.progress_logs.filter((l: { action: string }) => l.action === 'reject').length;
 
+  // P0 功能数据
+  const hasAIDetection = data.report.ai_detection_result;
+  const hasChecklist = data.report.checklist_completed && data.report.checklist_completed.length > 0;
+  const hasCopyright = data.report.copyright_declaration;
+
   return (
     <div className="min-h-screen bg-page-gradient py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -143,6 +157,7 @@ export default function DeliveryReportPage() {
               <div><span className="text-slate-400">服务单号：</span><span className="text-slate-800 font-medium">{data.order.order_no}</span></div>
               <div><span className="text-slate-400">服务类型：</span><span className="text-slate-800">{data.order.service_type}</span></div>
               <div><span className="text-slate-400">卖家：</span><span className="text-slate-800">{data.order.seller_nickname}</span></div>
+              {data.order.buyer_nickname && <div><span className="text-slate-400">买家：</span><span className="text-slate-800">{data.order.buyer_nickname}</span></div>}
               {data.order.seller_id && <div><span className="text-slate-400">卖家ID：</span><span className="text-slate-800">{data.order.seller_id}</span></div>}
               <div><span className="text-slate-400">创建时间：</span><span className="text-slate-800">{new Date(data.order.created_at).toLocaleDateString()}</span></div>
               <div><span className="text-slate-400">总耗时：</span><span className="text-slate-800">{totalDays}天</span></div>
@@ -216,6 +231,30 @@ export default function DeliveryReportPage() {
               <div className="text-sm font-mono text-indigo-700">{data.report.notarization_no}</div>
             </div>
           </div>
+        </div>
+
+        {/* P0 升级功能区域 */}
+        <div className="space-y-4">
+          {/* 品类化交付清单 */}
+          {hasChecklist && (
+            <CategoryChecklistDisplay
+              serviceType={data.order.service_type}
+              checkedItems={data.report.checklist_completed}
+            />
+          )}
+
+          {/* AI 原创性检测 */}
+          {hasAIDetection && (
+            <AIDetectionReport data={data.report.ai_detection_result!} />
+          )}
+
+          {/* 版权声明 */}
+          {hasCopyright && (
+            <CopyrightNotice
+              data={data.report.copyright_declaration!}
+              notarizationNo={data.report.notarization_no}
+            />
+          )}
         </div>
 
         {/* 操作按钮 */}
