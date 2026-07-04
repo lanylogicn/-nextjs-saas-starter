@@ -33,8 +33,8 @@ import DeliveryReportModal from '@/components/seller/DeliveryReportModal';
 import CelebrationModal from '@/components/seller/CelebrationModal';
 
 const NODE_LABELS: Record<number, string> = {
-  1: '订单接收', 2: '需求梳理', 3: '制作中',
-  4: '初稿完成，等待审核', 5: '审核通过，终稿输出', 6: '终稿已交付', 7: '确认完成',
+  1: '下单支付', 2: '需求确认', 3: '制作中',
+  4: '初稿交付', 5: '修改调整', 6: '终稿交付', 7: '确认收货',
 };
 
 const NODE_COLORS: Record<number, string> = {
@@ -43,8 +43,9 @@ const NODE_COLORS: Record<number, string> = {
 };
 
 interface Order {
-  id: string; order_no: string; buyer_nickname: string; service_type: string;
+  id: string; order_no: string; buyer_nickname: string; seller_id: string; service_type: string;
   service_content: string; current_node: number; estimated_delivery: string;
+  amount?: number; price?: number; completed_at?: string;
   created_at: string; updated_at: string;
 }
 
@@ -54,21 +55,22 @@ interface Message {
 
 function ProgressBar({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-1.5 my-2 flex-wrap">
+    <div className="flex items-center gap-1 my-2 flex-wrap">
       {Array.from({ length: 7 }, (_, i) => {
         const node = i + 1;
         const filled = node <= current;
         return (
-          <div key={node} className="flex items-center gap-1.5">
-            <div className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+          <div key={node} className="flex items-center gap-1">
+            <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
               filled ? `${NODE_COLORS[node]} text-white shadow-sm` : 'bg-stone-200 text-stone-400'
             } ${filled && node === current ? 'ring-2 ring-indigo-400 ring-offset-1' : ''}`} title={NODE_LABELS[node]}>
               {node}
             </div>
-            {node < 7 && <div className={`w-3 h-0.5 ${filled && node < current ? 'bg-indigo-600' : 'bg-stone-200'}`} />}
+            {node < 7 && <div className={`w-2 h-0.5 ${filled && node < current ? 'bg-indigo-600' : 'bg-stone-200'}`} />}
           </div>
         );
       })}
+      <span className="ml-2 text-xs text-stone-500">第{current}步/共7步 · {NODE_LABELS[current]}</span>
     </div>
   );
 }
@@ -713,28 +715,43 @@ export default function HomePage() {
             ) : (
               <div className="space-y-4">
                 {orders.map(order => (
-                  <Card key={order.id} className="border-indigo-100">
+                  <Card key={order.id} className="border-indigo-100 hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
+                      {/* Header: Order No + Category + Status */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-mono text-indigo-700 font-bold">{order.order_no}</span>
-                          <span className="ml-2 text-stone-600">{order.service_type}</span>
+                          <Badge className="bg-slate-100 text-slate-700 text-xs">{order.service_type}</Badge>
+                          <Badge className={order.current_node === 7 ? 'bg-emerald-100 text-emerald-700' : order.current_node === 4 ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}>
+                            {NODE_LABELS[order.current_node]}
+                          </Badge>
                         </div>
-                        <Badge className={order.current_node === 7 ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}>
-                          {NODE_LABELS[order.current_node]}
-                        </Badge>
+                        {(order.amount || order.price) && (
+                          <span className="text-lg font-bold text-slate-900">¥{((order.amount || order.price || 0) / 100).toFixed(2)}</span>
+                        )}
                       </div>
-                      <p className="text-sm text-stone-500 mb-2">买家：{order.buyer_nickname} | {order.service_content}</p>
+                      {/* Service Content */}
+                      <p className="text-sm text-stone-600 mb-3 line-clamp-2">{order.service_content}</p>
+                      {/* Progress Bar with Node Names */}
                       <ProgressBar current={order.current_node} />
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-stone-400">创建于 {new Date(order.created_at).toLocaleString('zh-CN')}</span>
+                      {/* Footer: Time + Actions */}
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-stone-400">创建：{new Date(order.created_at).toLocaleDateString('zh-CN')}</span>
+                          {order.estimated_delivery && (
+                            <span className="text-xs text-stone-400">预计交付：{new Date(order.estimated_delivery).toLocaleDateString('zh-CN')}</span>
+                          )}
+                          {order.completed_at && (
+                            <span className="text-xs text-emerald-600">完成：{new Date(order.completed_at).toLocaleDateString('zh-CN')}</span>
+                          )}
+                        </div>
                         {order.current_node < 7 && order.current_node !== 4 && (
                           <Button size="sm" onClick={() => handleAdvance(order.id)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            推进到节点 {order.current_node + 1}
+                            推进到「{NODE_LABELS[order.current_node + 1]}」
                           </Button>
                         )}
                         {order.current_node === 4 && (
-                          <span className="text-xs text-orange-600 font-medium">等待买家审核...</span>
+                          <span className="text-xs text-orange-600 font-medium bg-orange-50 px-3 py-1.5 rounded-full">等待买家审核...</span>
                         )}
                         {order.current_node === 7 && (
                           <div className="flex gap-2">
