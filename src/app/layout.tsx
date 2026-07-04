@@ -1,29 +1,29 @@
+/**
+ * @file 全局根布局
+ * @description
+ * Next.js App Router 根布局，所有页面共享。
+ * 包含：HTML元数据（标题/描述/关键词）、全局字体、最小高度、渐变背景。
+ * 子组件 ClientLayout 处理客户端逻辑（Navbar/Footer/认证Provider/新手引导）。
+ */
 import type { Metadata } from 'next';
 import './globals.css';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
+import ClientLayout from '@/components/ClientLayout';
 
 export const metadata: Metadata = {
-  title: {
-    default: '奕诺 - 代做服务信任基础设施',
-    template: '%s | 奕诺',
-  },
-  description:
-    '奕诺为代做服务提供 AI 检测报告、品类化交付模板、版权声明三大信任支柱，让每一笔交易都有据可查、有证可依。',
-  keywords: ['奕诺', '代做服务', 'AI检测', '交付模板', '版权声明', '信任基础设施'],
+  title: '奕諾-服务进度存证管家',
+  description: '闲鱼卖家与买家的服务交付进度管理工具，支持进度追踪、审核确认、存证管理',
+  keywords: ['奕諾', '服务进度', '交付管理', '闲鱼工具', '存证管家'],
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="zh-CN">
-      <body className="min-h-screen flex flex-col font-sans">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <body className="min-h-screen antialiased bg-gradient-to-br from-slate-50 via-indigo-50/30 to-white">
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

@@ -6,122 +6,201 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-amber: var(--amber);
-  --color-amber-foreground: var(--amber-foreground);
-  --color-success: var(--success);
-  --color-warn: var(--warn);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
   --font-sans:
-    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Inter', ui-sans-serif,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif,
     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  --font-serif:
-    'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
-    'Times New Roman', Times, serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
+  --font-serif:
+    'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
+    'Times New Roman', Times, serif;
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.98 0.003 80);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(0.96 0.005 80);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(0.98 0.003 80);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.15 0 0);
-  --primary-foreground: oklch(0.98 0.003 80);
-  --secondary: oklch(0.96 0.005 80);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.94 0.005 80);
-  --muted-foreground: oklch(0.45 0.01 60);
-  --accent: oklch(0.94 0.008 80);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.008 80);
-  --input: oklch(0.90 0.008 80);
-  --ring: oklch(0.6 0.12 80);
-  --amber: oklch(0.6 0.12 80);
-  --amber-foreground: oklch(0.98 0.003 80);
-  --success: oklch(0.55 0.15 150);
-  --warn: oklch(0.55 0.15 40);
-  --sidebar: oklch(0.98 0.003 80);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.15 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0.003 80);
-  --sidebar-accent: oklch(0.96 0.005 80);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.90 0.008 80);
-  --sidebar-ring: oklch(0.6 0.12 80);
+  --radius: 0.625rem;
+
+  /* === 奕诺品牌配色 - 专业靛蓝体系 === */
+  /* 主色：靛蓝 - 专业、可信、沉稳 */
+  --background: #F8FAFC;
+  --foreground: #1E293B;
+  --card: #FFFFFF;
+  --card-foreground: #1E293B;
+  --popover: #FFFFFF;
+  --popover-foreground: #1E293B;
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF2FF;
+  --secondary-foreground: #3730A3;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #EEF2FF;
+  --accent-foreground: #3730A3;
+  --destructive: #DC2626;
+  --border: #E2E8F0;
+  --input: #CBD5E1;
+  --ring: #4F46E5;
+  --chart-1: #4F46E5;
+  --chart-2: #059669;
+  --chart-3: #EA580C;
+  --chart-4: #7C3AED;
+  --chart-5: #0891B2;
+  --sidebar: #F8FAFC;
+  --sidebar-foreground: #1E293B;
+  --sidebar-primary: #4F46E5;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEF2FF;
+  --sidebar-accent-foreground: #3730A3;
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: #4F46E5;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-  }
-  h1, h2, h3 {
-    font-family: var(--font-serif);
+    @apply bg-background text-foreground;
   }
 }
 
-/* 印章动画 */
-@keyframes stamp-in {
-  0% { transform: scale(1.5) rotate(-15deg); opacity: 0; }
-  60% { transform: scale(0.95) rotate(2deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+body {
+  @apply font-sans;
 }
 
-.animate-stamp {
-  animation: stamp-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+/* === 奕诺全局品牌工具类 === */
+.brand-gradient-text {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* 渐入动画 */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+.brand-gradient-bg {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%);
 }
 
-.animate-fade-up {
-  animation: fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+.brand-card {
+  @apply bg-white rounded-xl border border-slate-200 shadow-sm;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafe 100%);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.brand-card:hover {
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
 }
 
-/* 进度条动画 */
-@keyframes progress-fill {
-  from { width: 0%; }
+.brand-btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg px-5 py-2.5 transition-all duration-200;
+}
+.brand-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.animate-progress {
-  animation: progress-fill 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+.brand-btn-secondary {
+  @apply bg-white hover:bg-slate-50 text-indigo-600 font-medium rounded-lg px-5 py-2.5 border border-indigo-200 transition-all duration-200;
+}
+
+.brand-btn-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-5 py-2.5 transition-all duration-200;
+}
+
+.brand-section-dark {
+  @apply bg-slate-900;
+}
+
+.brand-input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-colors;
+}
+
+/* Custom progress node animations */
+@keyframes node-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes node-reject {
+  0%, 100% { background-color: #DC2626; }
+  50% { background-color: #FCA5A5; }
+}
+
+.animate-node-pop {
+  animation: node-pop 0.3s ease-out;
+}
+
+.animate-node-reject {
+  animation: node-reject 0.4s ease-out;
+}
+
+/* Number tabular for order numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* === 页面级渐变背景 === */
+.page-gradient {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 40%, #f5f3ff 70%, #ffffff 100%);
+  min-height: 100vh;
+}
+
+.page-gradient-warm {
+  background: linear-gradient(135deg, #eef2ff 0%, #faf5ff 50%, #f0fdf4 100%);
+  min-height: 100vh;
+}
+
+/* === 卡片微渐变（增强层次感） === */
+.card-gradient-subtle {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 60%, #eef2ff 100%);
+}
+
+.card-gradient-indigo {
+  background: linear-gradient(135deg, #ffffff 0%, #eef2ff 50%, #e0e7ff 100%);
+}
+
+.card-gradient-emerald {
+  background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 50%, #d1fae5 100%);
+}
+
+/* === 渐变分隔线 === */
+.gradient-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #c7d2fe 50%, transparent 100%);
 }
