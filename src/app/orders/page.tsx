@@ -51,6 +51,7 @@ interface Order {
   current_node: number;
   estimated_delivery: string | null;
   amount?: number;
+  price?: number;
   created_at: string;
   updated_at: string;
   completed_at?: string;
@@ -221,6 +222,7 @@ export default function OrdersPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-indigo-700">{order.order_no}</span>
+                          <Badge className="bg-slate-100 text-slate-600 border-slate-200 text-xs">{order.service_type}</Badge>
                           {getStatusBadge(order)}
                         </div>
                         <p className="text-sm text-slate-500 mt-0.5">
@@ -233,7 +235,12 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-slate-700">{order.service_type}</p>
+                      {(order.amount || order.price) && (
+                        <p className="text-lg font-bold text-slate-900">
+                          <DollarSign className="w-4 h-4 inline" />
+                          {((order.amount || order.price || 0) / 100).toFixed(2)}
+                        </p>
+                      )}
                       <p className="text-xs text-slate-400 mt-0.5">
                         <Calendar className="w-3 h-3 inline mr-1" />
                         {formatDate(order.created_at)}
@@ -335,6 +342,18 @@ export default function OrdersPage() {
                         : '未设置'}
                     </p>
                   </div>
+                  {(selectedOrder.amount || selectedOrder.price) && (
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500">订单金额</p>
+                      <p className="text-lg font-bold text-slate-900">¥{((selectedOrder.amount || selectedOrder.price || 0) / 100).toFixed(2)}</p>
+                    </div>
+                  )}
+                  {selectedOrder.completed_at && (
+                    <div className="bg-emerald-50 rounded-lg p-3">
+                      <p className="text-xs text-emerald-600">完成时间</p>
+                      <p className="text-sm text-emerald-700">{new Date(selectedOrder.completed_at).toLocaleString('zh-CN')}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Service Content */}
