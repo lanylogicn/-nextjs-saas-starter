@@ -390,6 +390,181 @@ export default function HomePage() {
           `}</style>
         </section>
 
+        {/* P0 New Features Section */}
+        <section className="py-20 px-4 bg-gradient-to-b from-white to-indigo-50/50">
+          <div className="max-w-6xl mx-auto">
+            {/* Section header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-100 to-violet-100 border border-indigo-200 mb-4">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <span className="text-sm font-semibold text-indigo-700">P0 新功能 · 免费开放</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">
+                全新升级，信任加倍
+              </h2>
+              <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto">
+                三大核心功能上线，为每一次交付提供更专业的信任保障
+              </p>
+            </div>
+
+            {/* Feature cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* AI检测报告 */}
+              <Link
+                href="/ai-detection"
+                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300"
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <div className="relative">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white mb-5 shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                    </svg>
+                  </div>
+
+                  {/* Badge */}
+                  <span className="absolute top-0 right-0 px-2 py-0.5 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full">
+                    免费
+                  </span>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-indigo-700 transition-colors">
+                    AI 检测报告
+                  </h3>
+                  <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                    基于多维度文本分析，智能检测交付物原创性，AIGC疑似度、模板套用、质量评分一目了然
+                  </p>
+
+                  {/* Features list */}
+                  <ul className="space-y-2">
+                    {['5大检测维度分析', '自动生成检测报告', '公证编号存证'].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-slate-500">
+                        <svg className="w-4 h-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                    查看详情
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+
+              {/* 品类化交付模板 */}
+              <Link
+                href="/templates"
+                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300"
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <div className="relative">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white mb-5 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                    </svg>
+                  </div>
+
+                  {/* Badge */}
+                  <span className="absolute top-0 right-0 px-2 py-0.5 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full">
+                    免费
+                  </span>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-indigo-700 transition-colors">
+                    品类化交付模板
+                  </h3>
+                  <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                    覆盖PPT、论文、文案、设计、代码、简历6大品类，每品类10+标准交付检查项
+                  </p>
+
+                  {/* Features list */}
+                  <ul className="space-y-2">
+                    {['6大品类标准模板', '交付清单可勾选', '自动计算完成进度'].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-slate-500">
+                        <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                    查看模板
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+
+              {/* 版权声明模块 */}
+              <Link
+                href="/copyright"
+                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300"
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <div className="relative">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white mb-5 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.153 9 11.251 5.176-1.098 9-5.659 9-11.251 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+                    </svg>
+                  </div>
+
+                  {/* Badge */}
+                  <span className="absolute top-0 right-0 px-2 py-0.5 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full">
+                    免费
+                  </span>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-indigo-700 transition-colors">
+                    版权声明模块
+                  </h3>
+                  <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                    为交付物附带正式版权声明，明确原创性、版权归属、使用范围和授权方式
+                  </p>
+
+                  {/* Features list */}
+                  <ul className="space-y-2">
+                    {['原创性声明', '多种授权协议', '公证编号存证'].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-slate-500">
+                        <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                    了解详情
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* How it works */}
         <section id="about" className="py-20 px-4 bg-gradient-to-b from-white via-indigo-50/30 to-white">
           <div className="max-w-4xl mx-auto">
