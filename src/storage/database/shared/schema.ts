@@ -94,6 +94,24 @@ export const progressLogs = pgTable("progress_logs", {
   index("progress_logs_created_at_idx").on(table.created_at),
 ]);
 
+// Service progress (物流式进展记录)
+export const serviceProgress = pgTable("service_progress", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+  order_id: varchar("order_id", { length: 36 }).notNull().references(() => serviceOrders.id),
+  node_index: integer("node_index").notNull(), // 1-7 节点
+  sub_node_index: integer("sub_node_index"), // 虚拟子节点索引
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  image_urls: jsonb("image_urls"), // 图片URL数组
+  operator_id: varchar("operator_id", { length: 36 }),
+  operator_type: varchar("operator_type", { length: 20 }).notNull().default("system"), // seller/buyer/system
+  is_virtual: boolean("is_virtual").default(false).notNull(), // 是否为虚拟子节点
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("service_progress_order_id_idx").on(table.order_id),
+  index("service_progress_created_at_idx").on(table.created_at),
+]);
+
 // Messages
 export const messages = pgTable("messages", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
