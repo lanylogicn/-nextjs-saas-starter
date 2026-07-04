@@ -1,4 +1,11 @@
-# 项目上下文
+# 奕诺 - 代做服务信任基础设施
+
+## 项目概览
+
+奕诺是代做服务信任基础设施，提供三大核心功能：
+1. **AI 检测报告** - 多维度 AI 生成概率分析，出具权威检测报告
+2. **品类化交付模板** - 覆盖学术、设计、开发、文案、翻译、咨询等品类的标准化交付模板
+3. **版权声明生成** - 一键生成具备法律参考价值的版权声明文件
 
 ### 版本技术栈
 
@@ -11,25 +18,28 @@
 ## 目录结构
 
 ```
-├── public/                 # 静态资源
-├── scripts/                # 构建与启动脚本
-│   ├── build.sh            # 构建脚本
-│   ├── dev.sh              # 开发环境启动脚本
-│   ├── prepare.sh          # 预处理脚本
-│   └── start.sh            # 生产环境启动脚本
+├── public/                     # 静态资源
+├── scripts/                    # 构建与启动脚本
 ├── src/
-│   ├── app/                # 页面路由与布局
-│   ├── components/ui/      # Shadcn UI 组件库
-│   ├── hooks/              # 自定义 Hooks
-│   ├── lib/                # 工具库
-│   │   └── utils.ts        # 通用工具函数 (cn)
-│   └── server.ts           # 自定义服务端入口
-├── next.config.ts          # Next.js 配置
-├── package.json            # 项目依赖管理
-└── tsconfig.json           # TypeScript 配置
+│   ├── app/                    # 页面路由与布局
+│   │   ├── page.tsx            # 首页 - 品牌展示
+│   │   ├── report/page.tsx     # AI 检测报告页
+│   │   ├── templates/page.tsx  # 品类化交付模板页
+│   │   ├── copyright/page.tsx  # 版权声明页
+│   │   └── api/detect/route.ts # AI 检测 API
+│   ├── components/
+│   │   ├── ui/                 # Shadcn UI 组件库
+│   │   ├── layout/             # 布局组件 (header, footer)
+│   │   ├── report/             # 检测报告组件
+│   │   ├── templates/          # 交付模板组件
+│   │   └── copyright/          # 版权声明组件
+│   ├── hooks/                  # 自定义 Hooks
+│   ├── lib/utils.ts            # 通用工具函数
+│   └── server.ts               # 自定义服务端入口
+├── DESIGN.md                   # 设计规范文件
+├── next.config.ts              # Next.js 配置
+└── package.json                # 项目依赖管理
 ```
-
-- 项目文件（如 app 目录、pages 目录、components 等）默认初始化到 `src/` 目录下。
 
 ## 包管理规范
 
