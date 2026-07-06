@@ -53,24 +53,60 @@ interface Message {
   id: string; title: string; content: string; type: string; is_read: boolean; created_at: string;
 }
 
-function ProgressBar({ current }: { current: number }) {
+function Timeline({ order }: { order: Order }) {
+  const created = new Date(order.created_at);
+  const current = order.current_node;
+  const SUB_DATA: Record<number, {label:string;desc:string;time:string}[]> = {
+    1: [{label:'买家已下单',desc:'订单已被系统接收',time:'10:30'},{label:'卖家已确认接单',desc:'已确认订单内容',time:'10:45'}],
+    2: [{label:'分析需求细节',desc:'正在梳理买家具体需求',time:'14:00'},{label:'制定执行方案',desc:'已确定服务方案',time:'15:30'}],
+    3: [{label:'素材搜集与整理',desc:'相关素材已搜集完成',time:'09:00'},{label:'核心内容制作中',desc:'正在执行制作任务',time:'11:20'},{label:'初版设计定稿',desc:'设计初版完成',time:'16:00'}],
+    4: [{label:'初稿已生成',desc:'初稿已上传等待审核',time:'17:00'}],
+    5: [{label:'买家已通过审核',desc:'终稿已通过审核',time:'10:00'}],
+    6: [{label:'文件已发送',desc:'终稿文件已发送',time:'11:00'},{label:'买家已签收',desc:'买家已确认收到',time:'11:30'}],
+    7: [{label:'交易完成',desc:'服务全流程结束',time:'14:00'}],
+  };
+  const timeline = Array.from({length:7},(_,i)=>{
+    const n=i+1, d=new Date(created.getTime()+n*6*3600000);
+    const ts=`${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return {node:n,label:NODE_LABELS[n],desc:n<current?'此节点已完成':n===current?(SUB_DATA[n]?.[SUB_DATA[n].length-1]?.desc||'处理中...'):'等待中',ts,completed:n<current,active:n===current,subs:SUB_DATA[n]||[]};
+  });
   return (
-    <div className="flex items-center gap-1 my-2 flex-wrap">
-      {Array.from({ length: 7 }, (_, i) => {
-        const node = i + 1;
-        const filled = node <= current;
-        return (
-          <div key={node} className="flex items-center gap-1">
-            <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
-              filled ? `${NODE_COLORS[node]} text-white shadow-sm` : 'bg-stone-200 text-stone-400'
-            } ${filled && node === current ? 'ring-2 ring-indigo-400 ring-offset-1' : ''}`} title={NODE_LABELS[node]}>
-              {node}
+    <div className='relative space-y-0'>
+      {timeline.map((e,idx)=>(
+        <div key={e.node} className='relative flex gap-4'>
+          <div className='flex flex-col items-center'>
+            <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-500 ${e.completed?'bg-gradient-to-br from-indigo-500 to-violet-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/30':e.active?'bg-gradient-to-br from-indigo-500 to-violet-600 border-indigo-300 text-white shadow-lg shadow-indigo-500/40 timeline-pulse':'bg-slate-800 border-slate-600 text-slate-500'}`}>
+              {e.completed?<svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round'><polyline points='20 6 9 17 4 12'/></svg>:e.node}
             </div>
-            {node < 7 && <div className={`w-2 h-0.5 ${filled && node < current ? 'bg-indigo-600' : 'bg-stone-200'}`} />}
+            {idx<6&&<div className={`w-0.5 flex-1 min-h-[20px] ${e.completed?'bg-gradient-to-b from-indigo-500 to-indigo-400/50':'bg-slate-700/50'}`}/>}
           </div>
-        );
-      })}
-      <span className="ml-2 text-xs text-stone-500">第{current}步/共7步 · {NODE_LABELS[current]}</span>
+          <div className='flex-1 pb-5'>
+            <div className={`rounded-xl p-4 transition-all ${e.active?'bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 shadow-lg shadow-indigo-500/5':e.completed?'bg-white/5 border border-white/5':'bg-slate-800/30 border border-slate-700/30'}`}>
+              <div className='flex items-center justify-between mb-1.5'>
+                <span className={`text-sm font-semibold ${e.active?'text-indigo-300':e.completed?'text-white/90':'text-slate-500'}`}>{e.label}</span>
+                <span className={`text-xs font-mono ${e.active?'text-indigo-400/80':'text-slate-600'}`}>{e.ts}</span>
+              </div>
+              <p className={`text-xs ${e.active?'text-slate-300':e.completed?'text-slate-400/80':'text-slate-600'}`}>{e.desc}</p>
+              {e.subs.length>0&&(
+                <div className='mt-3 space-y-2 pl-2 border-l-2 border-indigo-500/20'>
+                  {e.subs.map((s,si)=>(
+                    <div key={si} className='flex items-start gap-2.5'>
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${e.active?'bg-indigo-400 sub-node-glow':'bg-slate-600'}`}/>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center justify-between'>
+                          <span className={`text-xs font-medium ${e.active?'text-slate-200':'text-slate-500'}`}>{s.label}</span>
+                          <span className='text-[10px] font-mono text-slate-600 ml-2 flex-shrink-0'>{s.time}</span>
+                        </div>
+                        <p className='text-[11px] text-slate-500 mt-0.5 truncate'>{s.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -715,57 +751,63 @@ export default function HomePage() {
             ) : (
               <div className="space-y-4">
                 {orders.map(order => (
-                  <Card key={order.id} className="border-indigo-100 hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      {/* Header: Order No + Category + Status */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-indigo-700 font-bold">{order.order_no}</span>
-                          <Badge className="bg-slate-100 text-slate-700 text-xs">{order.service_type}</Badge>
-                          <Badge className={order.current_node === 7 ? 'bg-emerald-100 text-emerald-700' : order.current_node === 4 ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}>
-                            {NODE_LABELS[order.current_node]}
-                          </Badge>
-                        </div>
-                        {(order.amount || order.price) && (
-                          <span className="text-lg font-bold text-slate-900">¥{((order.amount || order.price || 0) / 100).toFixed(2)}</span>
-                        )}
-                      </div>
-                      {/* Service Content */}
-                      <p className="text-sm text-stone-600 mb-3 line-clamp-2">{order.service_content}</p>
-                      {/* Progress Bar with Node Names */}
-                      <ProgressBar current={order.current_node} />
-                      {/* Footer: Time + Actions */}
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-stone-400">创建：{new Date(order.created_at).toLocaleDateString('zh-CN')}</span>
-                          {order.estimated_delivery && (
-                            <span className="text-xs text-stone-400">预计交付：{new Date(order.estimated_delivery).toLocaleDateString('zh-CN')}</span>
-                          )}
-                          {order.completed_at && (
-                            <span className="text-xs text-emerald-600">完成：{new Date(order.completed_at).toLocaleDateString('zh-CN')}</span>
-                          )}
-                        </div>
-                        {order.current_node < 7 && order.current_node !== 4 && (
-                          <Button size="sm" onClick={() => handleAdvance(order.id)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            推进到「{NODE_LABELS[order.current_node + 1]}」
-                          </Button>
-                        )}
-                        {order.current_node === 4 && (
-                          <span className="text-xs text-orange-600 font-medium bg-orange-50 px-3 py-1.5 rounded-full">等待买家审核...</span>
-                        )}
-                        {order.current_node === 7 && (
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => setReportOrderId(order.id)} className="text-indigo-700 border-indigo-300 hover:bg-indigo-50">
-                              <FileSearch className="w-3 h-3 mr-1" />交付报告
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setCelebrationOrderId(order.id)} className="text-indigo-700 border-indigo-300 hover:bg-indigo-50">
-                              <PartyPopper className="w-3 h-3 mr-1" />交付喜报
-                            </Button>
+                  <div key={order.id} className='relative group'>
+                    <div className='relative rounded-2xl overflow-hidden border border-indigo-500/15 bg-gradient-to-br from-[#0f1629] to-[#1a1f3a] shadow-2xl shadow-indigo-500/5'>
+                      <div className='absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none'/>
+                      <div className='absolute bottom-0 left-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl pointer-events-none'/>
+                      <div className='relative p-5'>
+                        <div className='flex items-start justify-between mb-4'>
+                          <div>
+                            <div className='flex items-center gap-2 mb-1'>
+                              <span className='font-mono text-indigo-400 font-bold text-sm tabular-nums'>{order.order_no}</span>
+                              <span className='px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/20'>{order.service_type}</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${order.current_node===7?'bg-emerald-500/15 text-emerald-400 border-emerald-500/20':order.current_node===4?'bg-orange-500/15 text-orange-400 border-orange-500/20':'bg-indigo-500/15 text-indigo-300 border-indigo-500/20'}`}>
+                                {NODE_LABELS[order.current_node]}
+                              </span>
+                            </div>
+                            <p className='text-sm text-slate-400 line-clamp-1'>{order.service_content}</p>
                           </div>
-                        )}
+                          {(order.amount || order.price) && (
+                            <span className='text-xl font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent tabular-nums'>¥{((order.amount || order.price || 0) / 100).toFixed(2)}</span>
+                          )}
+                        </div>
+                        {/* Timeline */}
+                        <div className='mt-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2'>
+                          <Timeline order={order} />
+                        </div>
+                        {/* Footer */}
+                        <div className='flex items-center justify-between mt-4 pt-4 border-t border-white/5'>
+                          <div className='flex flex-col gap-1'>
+                            <span className='text-xs text-slate-500 font-mono'>创建：{new Date(order.created_at).toLocaleDateString('zh-CN')}</span>
+                            {order.estimated_delivery && (
+                              <span className='text-xs text-slate-500 font-mono'>预计交付：{new Date(order.estimated_delivery).toLocaleDateString('zh-CN')}</span>
+                            )}
+                            {order.completed_at && (
+                              <span className='text-xs text-emerald-400 font-mono'>完成：{new Date(order.completed_at).toLocaleDateString('zh-CN')}</span>
+                            )}
+                          </div>
+                          {order.current_node < 7 && order.current_node !== 4 && (
+                            <button onClick={() => handleAdvance(order.id)} className='px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:scale-105 transition-all'>
+                              推进到「{NODE_LABELS[order.current_node + 1]}」
+                            </button>
+                          )}
+                          {order.current_node === 4 && (
+                            <span className='text-xs text-orange-400 font-medium bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20'>等待买家审核...</span>
+                          )}
+                          {order.current_node === 7 && (
+                            <div className='flex gap-2'>
+                              <button onClick={() => setReportOrderId(order.id)} className='px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-all flex items-center gap-1'>
+                                <FileSearch className='w-3 h-3' />交付报告
+                              </button>
+                              <button onClick={() => setCelebrationOrderId(order.id)} className='px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-all flex items-center gap-1'>
+                                <PartyPopper className='w-3 h-3' />交付喜报
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
