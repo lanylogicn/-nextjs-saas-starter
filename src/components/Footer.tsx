@@ -28,7 +28,7 @@ export default function Footer() {
             <div className="md:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
                 <img src="/logo-yinuo.png" alt="奕諾" className="h-8 w-8 drop-shadow-[0_0_8px_rgba(0,255,255,0.35)]" />
-                <span className="text-white font-semibold text-base">奕诺</span>
+                <span className="text-gray-900 font-semibold text-base">奕诺</span>
               </div>
               <p className="text-sm text-slate-400 leading-relaxed">
                 专业服务交付存证平台<br />

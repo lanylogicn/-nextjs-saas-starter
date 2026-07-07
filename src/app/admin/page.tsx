@@ -1634,7 +1634,7 @@ export default function AdminPage() {
         <div className="h-16 flex items-center px-5 border-b border-stone-800">
           <img src="/logo-yinuo.png" alt="奕諾" className="h-10 w-10 drop-shadow-[0_0_10px_rgba(0,255,255,0.4)] mr-3" />
           <div>
-            <p className="text-white font-bold text-sm">奕諾</p>
+            <p className="text-gray-900 font-bold text-sm">奕诺</p>
             <p className="text-stone-500 text-xs">后台管理系统</p>
           </div>
           <button className="ml-auto lg:hidden text-stone-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
