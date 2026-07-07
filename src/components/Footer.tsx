@@ -27,7 +27,7 @@ export default function Footer() {
             {/* Brand column */}
             <div className="md:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
-                <img src="/logo-yinuo.png" alt="奕諾" className="h-8 w-auto drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
+                <img src="/logo-yinuo.png" alt="奕諾" className="h-8 w-8 rounded-full drop-shadow-[0_0_8px_rgba(0,255,255,0.35)]" />
               </div>
               <p className="text-sm text-slate-400 leading-relaxed">
                 专业服务交付存证平台<br />
