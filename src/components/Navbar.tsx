@@ -41,7 +41,7 @@ export default function Navbar() {
           {/* Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <img src="/logo-yinuo.png" alt="奕諾" className="h-10 w-10 drop-shadow-[0_0_10px_rgba(0,255,255,0.4)] transition-shadow group-hover:drop-shadow-[0_0_16px_rgba(0,255,255,0.6)]" />
-            <span className="text-white font-semibold text-lg">奕诺</span>
+            <span className="text-slate-800 font-semibold text-lg">奕诺</span>
           </Link>
 
           {/* Right side */}
