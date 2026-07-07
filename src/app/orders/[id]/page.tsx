@@ -7,23 +7,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { LogisticsTimeline } from '@/components/service/logistics-timeline';
+import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
+import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
 import {
   ArrowLeft,
   Package,
   User,
   Calendar,
-  Clock,
   FileText,
-  Image,
   Send,
-  MessageCircle,
-  CheckCircle,
-  XCircle,
-  Edit,
-  Upload,
-  ChevronRight,
   Sparkles,
-  Zap,
   Truck,
   ClipboardCheck,
   AlertCircle,
@@ -138,8 +131,7 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newProgress, setNewProgress] = useState({ title: '', description: '' });
-  const [selectedNode, setSelectedNode] = useState(3);
+  const [progressRefreshKey, setProgressRefreshKey] = useState(0);
 
   useEffect(() => {
     // 使用模拟数据
@@ -147,22 +139,6 @@ export default function OrderDetailPage() {
     setProgress(MOCK_PROGRESS);
     setLoading(false);
   }, [orderId]);
-
-  const handleAddProgress = async () => {
-    if (!newProgress.title.trim()) return;
-    // TODO: 调用API添加进展
-    const newItem: ProgressItem = {
-      id: `new-${Date.now()}`,
-      node_index: selectedNode,
-      title: newProgress.title,
-      description: newProgress.description,
-      operator_type: 'seller',
-      is_virtual: false,
-      created_at: new Date().toISOString(),
-    };
-    setProgress([newItem, ...progress]);
-    setNewProgress({ title: '', description: '' });
-  };
 
   if (loading) {
     return (
@@ -264,52 +240,21 @@ export default function OrderDetailPage() {
           <LogisticsTimeline progress={progress} currentNode={order.current_node} />
         </div>
 
-        {/* Seller Action Panel */}
-        <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-800/50 p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-bold text-white">添加进展</h2>
-          </div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm text-slate-400">当前节点：</span>
-            <select
-              value={selectedNode}
-              onChange={(e) => setSelectedNode(Number(e.target.value))}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
-            >
-              {SERVICE_NODES.map(node => (
-                <option key={node.id} value={node.id}>{node.name}</option>
-              ))}
-            </select>
-          </div>
-          <input
-            type="text"
-            placeholder="进展标题（如：完成框架设计）"
-            value={newProgress.title}
-            onChange={(e) => setNewProgress({ ...newProgress, title: e.target.value })}
-            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 mb-3"
+        {/* Seller Progress Entry */}
+        <div className="mb-6">
+          <ServiceProgressEntry
+            orderId={orderId}
+            currentNodeIndex={Math.max(0, order.current_node - 1)}
+            onEntryAdded={() => setProgressRefreshKey((k) => k + 1)}
           />
-          <textarea
-            placeholder="详细描述进展情况..."
-            value={newProgress.description}
-            onChange={(e) => setNewProgress({ ...newProgress, description: e.target.value })}
-            rows={3}
-            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 mb-3 resize-none"
+        </div>
+
+        {/* Progress History */}
+        <div className="mb-6">
+          <ServiceProgressHistory
+            orderId={orderId}
+            refreshKey={progressRefreshKey}
           />
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-400 hover:text-white hover:border-blue-500/30 transition-all">
-              <Upload className="w-4 h-4" />
-              上传图片
-            </button>
-            <button
-              onClick={handleAddProgress}
-              disabled={!newProgress.title.trim()}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-lg font-medium shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <Send className="w-4 h-4" />
-              发布进展
-            </button>
-          </div>
         </div>
 
         {/* Service Content */}

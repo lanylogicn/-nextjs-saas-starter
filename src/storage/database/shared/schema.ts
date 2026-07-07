@@ -112,6 +112,20 @@ export const serviceProgress = pgTable("service_progress", {
   index("service_progress_created_at_idx").on(table.created_at),
 ]);
 
+// Service progress entries (节点操作记录)
+export const serviceProgressEntries = pgTable("service_progress_entries", {
+  id: serial("id").primaryKey(),
+  order_id: varchar("order_id", { length: 50 }).notNull(),
+  node_index: integer("node_index").notNull(),
+  content: text("content"),
+  files: jsonb("files"), // Array of {url, filename, type}
+  operator: varchar("operator", { length: 50 }).notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("service_progress_entries_order_id_idx").on(table.order_id),
+  index("service_progress_entries_node_index_idx").on(table.node_index),
+]);
+
 // Messages
 export const messages = pgTable("messages", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
