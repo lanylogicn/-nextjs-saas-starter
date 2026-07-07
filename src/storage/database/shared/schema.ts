@@ -66,6 +66,7 @@ export const serviceOrders = pgTable("service_orders", {
   seller_id: varchar("seller_id", { length: 36 }).notNull().references(() => users.id),
   buyer_nickname: varchar("buyer_nickname", { length: 128 }).notNull(),
   service_type: varchar("service_type", { length: 100 }).notNull(),
+  category: varchar("category", { length: 30 }), // ppt_design, thesis_writing, copywriting, design_outsource, code_development, resume_optimize
   service_content: text("service_content").notNull(),
   current_node: integer("current_node").notNull().default(1),
   estimated_delivery: timestamp("estimated_delivery", { withTimezone: true }),
@@ -285,7 +286,9 @@ export const deliveryReports = pgTable("delivery_reports", {
   verify_token: varchar("verify_token", { length: 100 }).notNull().unique().default(sql`encode(gen_random_bytes(16), 'hex')`),
   summary: text("summary"),
   // P0 升级字段
-  ai_detection_status: varchar("ai_detection_status", { length: 20 }).default("pending"), // passed | pending | failed
+  ai_detection_status: varchar("ai_detection_status", { length: 20 }).default("pending"), // detected | human_original | not_detected | passed | pending | failed
+  ai_detection_score: integer("ai_detection_score"), // AI检测得分（0-100）
+  ai_detection_report_url: varchar("ai_detection_report_url", { length: 500 }), // 检测报告文件URL
   ai_detection_result: jsonb("ai_detection_result"), // AI 检测结果详情
   checklist_completed: jsonb("checklist_completed"), // 品类清单已完成项 ID 数组
   copyright_declaration: jsonb("copyright_declaration"), // 版权声明数据

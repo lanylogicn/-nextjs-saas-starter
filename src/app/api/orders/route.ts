@@ -17,6 +17,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getCurrentUser, generateOrderNo, NODE_LABELS } from '@/lib/auth';
+import { inferCategory } from '@/lib/category-templates';
 
 // GET: List seller's orders
 export async function GET() {
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
         seller_id: tokenUser.userId,
         buyer_nickname,
         service_type,
+        category: inferCategory(service_type),
         service_content,
         current_node: 1,
         estimated_delivery: estimated_delivery || null,
