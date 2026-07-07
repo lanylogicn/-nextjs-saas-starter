@@ -3,13 +3,12 @@
  * @description
  * 奕诺产品的核心页面，承担双重角色：
  * 1. 未登录时 → Landing Page：展示品牌标语、核心功能介绍、使用步骤、关于我们、CTA
- * 2. 已登录时 → 卖家工作台：功能卡片导航（创建服务单/我的服务单/通知中心/服务计划中心/信誉主页/导出记录/交付喜报）
- *    + 服务单列表管理 + 订单详情 + 进度推进 + 交付报告弹窗 + 交付喜报弹窗
+ * 2. 已登录时 → 卖家工作台：功能卡片导航（创建服务单/我的服务单/通知中心/服务计划中心/信誉主页/导出记录）
+ *    + 服务单列表管理 + 订单详情 + 进度推进 + 交付报告弹窗
  *
  * 关键依赖：
  * - useAuth() 提供登录状态
  * - DeliveryReportModal  专业交付报告弹窗
- * - CelebrationModal     交付喜报弹窗
  */
 'use client';
 
@@ -28,9 +27,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { ClipboardList, FileSearch, Crown, Bell, Award, PartyPopper, Copy, Check } from 'lucide-react';
+import { ClipboardList, FileSearch, Crown, Bell, Award, Copy, Check } from 'lucide-react';
 import DeliveryReportModal from '@/components/seller/DeliveryReportModal';
-import CelebrationModal from '@/components/seller/CelebrationModal';
 
 const NODE_LABELS: Record<number, string> = {
   1: '下单支付', 2: '需求确认', 3: '制作中',
@@ -122,7 +120,6 @@ export default function HomePage() {
   const [activeSection, setActiveSection] = useState<'home' | 'orders' | 'notifications'>('home');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [reportOrderId, setReportOrderId] = useState<string | null>(null);
-  const [celebrationOrderId, setCelebrationOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const seen = localStorage.getItem('yinuo_onboarding_seen');
@@ -328,26 +325,6 @@ export default function HomePage() {
                       <path d="M24 4l5.5 11.2L42 17l-9 8.8L35 38l-11-5.8L13 38l2-12.2L6 17l12.5-1.8L24 4z" className="stroke-current" strokeWidth="2.5" strokeLinejoin="round" />
                       <circle cx="24" cy="21" r="5" className="stroke-current" strokeWidth="2" />
                       <path d="M21 21l2 2 4-4" className="stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ),
-                },
-                {
-                  title: '交付喜报',
-                  desc: '完成订单自动生成精美喜报，展示核心数据，附带分享文案',
-                  color: 'from-rose-500 to-pink-400',
-                  glow: 'group-hover:shadow-rose-500/25',
-                  border: 'group-hover:border-rose-400/40',
-                  iconBg: 'from-rose-500/20 to-pink-400/20',
-                  iconColor: 'text-rose-400',
-                  points: ['3种风格喜报：简约 / 数据 / 喜庆', '展示核心数据（如一次过稿·提前交付）', '附带分享文案，一键复制发布'],
-                  svg: (
-                    <svg viewBox="0 0 48 48" fill="none" className="w-8 h-8">
-                      <rect x="8" y="6" width="32" height="36" rx="3" className="stroke-current" strokeWidth="2.5" />
-                      <path d="M18 6v-2a6 6 0 0112 0v2" className="stroke-current" strokeWidth="2.5" />
-                      <circle cx="24" cy="22" r="6" className="stroke-current" strokeWidth="2.5" />
-                      <path d="M21 22l2 2 4-4" className="stroke-current" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M16 32h16" className="stroke-current" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-                      <path d="M20 36h8" className="stroke-current" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
                     </svg>
                   ),
                 },
@@ -775,9 +752,6 @@ export default function HomePage() {
                               <button onClick={() => setReportOrderId(order.id)} className='px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-all flex items-center gap-1'>
                                 <FileSearch className='w-3 h-3' />交付报告
                               </button>
-                              <button onClick={() => setCelebrationOrderId(order.id)} className='px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-xs hover:bg-white/10 transition-all flex items-center gap-1'>
-                                <PartyPopper className='w-3 h-3' />交付喜报
-                              </button>
                             </div>
                           )}
                         </div>
@@ -884,14 +858,6 @@ export default function HomePage() {
           orderId={reportOrderId}
           sellerId={user.userId}
           onClose={() => setReportOrderId(null)}
-        />
-      )}
-
-      {/* Delivery Celebration Modal */}
-      {celebrationOrderId && (
-        <CelebrationModal
-          orderId={celebrationOrderId}
-          onClose={() => setCelebrationOrderId(null)}
         />
       )}
     </div>

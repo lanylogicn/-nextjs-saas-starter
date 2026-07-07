@@ -30,7 +30,7 @@ function getFileAnnotations() {
     {
       category: '页面文件',
       files: [
-        { path: 'src/app/page.tsx', description: '首页 - Landing Page + 卖家管理面板', dependencies: 'DeliveryReportModal, CelebrationModal, AuthContext', exports: 'default: HomePage' },
+        { path: 'src/app/page.tsx', description: '首页 - Landing Page + 卖家管理面板', dependencies: 'DeliveryReportModal, AuthContext', exports: 'default: HomePage' },
         { path: 'src/app/buyer/page.tsx', description: '买家查询页 - 查询进度/审核/高级功能', dependencies: 'AuthContext, ContactModal', exports: 'default: BuyerPage' },
         { path: 'src/app/upgrade/page.tsx', description: '服务计划中心 - 三等级对比+升级', dependencies: 'AuthContext, ContactModal', exports: 'default: UpgradePage' },
         { path: 'src/app/seller/[id]/page.tsx', description: '卖家信誉主页 - 公开展示+QR码+长图', dependencies: 'qrcode.react, html-to-image', exports: 'default: SellerReputationPage' },
@@ -52,7 +52,6 @@ function getFileAnnotations() {
       category: '卖家专用组件',
       files: [
         { path: 'src/components/seller/DeliveryReportModal.tsx', description: '专业交付报告弹窗 - 时间轴+审核记录+公证编号+保存图片', dependencies: 'html-to-image, qrcode.react', exports: 'DeliveryReportModal' },
-        { path: 'src/components/seller/CelebrationModal.tsx', description: '交付喜报弹窗 - 3种风格+分享文案+保存图片', dependencies: 'html-to-image, qrcode.react', exports: 'CelebrationModal' },
       ],
     },
     {
@@ -116,7 +115,6 @@ function getFileAnnotations() {
         { path: 'src/app/api/orders/route.ts', description: '订单列表+创建', methods: 'GET/POST', params: 'GET: 无; POST: buyer_name, service_title, ...', returns: '订单列表/创建结果' },
         { path: 'src/app/api/orders/[id]/route.ts', description: '订单详情+推进', methods: 'GET/PUT', params: 'PUT: action=advance|reject, reason?', returns: '订单详情/推进结果' },
         { path: 'src/app/api/orders/[id]/review/route.ts', description: '买家审核', methods: 'POST', params: 'action=approve|reject, reason?', returns: '{ success }' },
-        { path: 'src/app/api/orders/[id]/celebration/route.ts', description: '交付喜报数据', methods: 'GET', params: '需开通delivery_celebration', returns: '喜报JSON' },
       ],
     },
     {
