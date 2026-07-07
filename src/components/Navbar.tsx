@@ -40,7 +40,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-14">
           {/* Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <img src="/logo-yinuo.png" alt="奕諾" className="h-8 w-auto rounded-lg shadow-sm shadow-indigo-500/20 group-hover:shadow-indigo-500/30 transition-shadow" />
+            <img src="/logo-yinuo.png" alt="奕諾" className="h-10 w-auto drop-shadow-[0_0_8px_rgba(59,130,246,0.3)] transition-shadow group-hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.5)]" />
           </Link>
 
           {/* Right side */}
