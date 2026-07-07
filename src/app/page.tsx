@@ -29,6 +29,8 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { ClipboardList, FileSearch, Crown, Bell, Award, Copy, Check } from 'lucide-react';
 import DeliveryReportModal from '@/components/seller/DeliveryReportModal';
+import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
+import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
 
 const NODE_LABELS: Record<number, string> = {
   1: '下单支付', 2: '需求确认', 3: '制作中',
@@ -727,6 +729,15 @@ export default function HomePage() {
                         {/* Timeline */}
                         <div className='mt-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2'>
                           <Timeline order={order} />
+                        </div>
+                        {/* Progress Entry & History */}
+                        <div className='mt-4 space-y-3'>
+                          <ServiceProgressEntry
+                            orderId={order.id}
+                            currentNodeIndex={Math.max(0, order.current_node - 1)}
+                            onEntryAdded={() => { fetchOrders(); }}
+                          />
+                          <ServiceProgressHistory orderId={order.id} />
                         </div>
                         {/* Footer */}
                         <div className='flex items-center justify-between mt-4 pt-4 border-t border-white/5'>
