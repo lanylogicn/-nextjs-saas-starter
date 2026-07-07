@@ -9,6 +9,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { LogisticsTimeline } from '@/components/service/logistics-timeline';
 import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
 import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
+import { CategoryTemplate } from '@/components/CategoryTemplate';
+import { AIDetectionReport } from '@/components/AIDetectionReport';
+import { CopyrightDeclaration } from '@/components/CopyrightDeclaration';
 import {
   ArrowLeft,
   Package,
@@ -332,6 +335,29 @@ export default function OrderDetailPage() {
             refreshKey={progressRefreshKey}
           />
         </div>
+
+        {/* P0 Features - 品类清单/AI检测/版权声明 */}
+        {order.current_node >= 3 && (
+          <div className="mb-6">
+            <CategoryTemplate
+              serviceType={order.service_type}
+              category={order.category}
+              mode="checklist"
+              orderId={orderId}
+              readOnly={false}
+            />
+          </div>
+        )}
+        {order.current_node >= 5 && (
+          <div className="mb-6">
+            <AIDetectionReport orderId={orderId} mode="submit" />
+          </div>
+        )}
+        {order.current_node >= 6 && (
+          <div className="mb-6">
+            <CopyrightDeclaration orderId={orderId} mode="submit" />
+          </div>
+        )}
 
         {/* Service Content */}
         <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-800/50 p-6">

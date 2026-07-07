@@ -31,6 +31,9 @@ import { ClipboardList, FileSearch, Crown, Bell, Award, Copy, Check } from 'luci
 import DeliveryReportModal from '@/components/seller/DeliveryReportModal';
 import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
 import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
+import { CategoryTemplate } from '@/components/CategoryTemplate';
+import { AIDetectionReport } from '@/components/AIDetectionReport';
+import { CopyrightDeclaration } from '@/components/CopyrightDeclaration';
 
 const NODE_LABELS: Record<number, string> = {
   1: '下单支付', 2: '需求确认', 3: '制作中',
@@ -45,7 +48,7 @@ const NODE_COLORS: Record<number, string> = {
 interface Order {
   id: string; order_no: string; buyer_nickname: string; seller_id: string; service_type: string;
   service_content: string; current_node: number; estimated_delivery: string;
-  amount?: number; price?: number; completed_at?: string;
+  amount?: number; price?: number; completed_at?: string; category?: string;
   created_at: string; updated_at: string;
 }
 
@@ -739,6 +742,22 @@ export default function HomePage() {
                           />
                           <ServiceProgressHistory orderId={order.id} />
                         </div>
+                        {/* P0 Features */}
+                        {order.current_node >= 3 && (
+                          <div className="mt-3">
+                            <CategoryTemplate serviceType={order.service_type} category={order.category} mode="checklist" orderId={order.id} readOnly={false} />
+                          </div>
+                        )}
+                        {order.current_node >= 5 && (
+                          <div className="mt-3">
+                            <AIDetectionReport orderId={order.id} mode="submit" />
+                          </div>
+                        )}
+                        {order.current_node >= 6 && (
+                          <div className="mt-3">
+                            <CopyrightDeclaration orderId={order.id} mode="submit" />
+                          </div>
+                        )}
                         {/* Footer */}
                         <div className='flex items-center justify-between mt-4 pt-4 border-t border-white/5'>
                           <div className='flex flex-col gap-1'>

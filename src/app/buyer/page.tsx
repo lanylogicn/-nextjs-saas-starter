@@ -13,6 +13,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LogisticsTimeline } from '@/components/service/logistics-timeline';
 import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
 import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
+import { CategoryTemplate } from '@/components/CategoryTemplate';
+import { AIDetectionReport } from '@/components/AIDetectionReport';
+import { CopyrightDeclaration } from '@/components/CopyrightDeclaration';
+import Link from 'next/link';
 import {
   Search,
   Package,
@@ -225,6 +229,13 @@ export default function BuyerPage() {
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+        {/* Back to Home */}
+        <div className="mb-4">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-blue-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            返回主页
+          </Link>
+        </div>
         {/* Query Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-medium mb-4">
@@ -351,6 +362,17 @@ export default function BuyerPage() {
                 currentNode={order.current_node}
               />
             </div>
+
+            {/* P0 Features - 品类清单/AI检测/版权声明 */}
+            {order.current_node >= 3 && (
+              <CategoryTemplate serviceType={order.service_type} category={null} mode="checklist" orderId={order.id} readOnly={true} />
+            )}
+            {order.current_node >= 5 && (
+              <AIDetectionReport orderId={order.id} mode="view" />
+            )}
+            {order.current_node >= 6 && (
+              <CopyrightDeclaration orderId={order.id} mode="view" />
+            )}
 
             {/* Node-specific interactions */}
 
