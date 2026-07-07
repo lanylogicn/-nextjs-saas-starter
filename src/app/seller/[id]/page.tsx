@@ -95,7 +95,6 @@ export default function SellerReputationPage() {
     ? `🔥 ${data.user.nickname} 的奕诺信誉宣言\n` +
       `📋 入驻 ${data.user.days_since_join} 天 | 完成订单 ${data.stats.completed_orders} 单\n` +
       `✅ 审核通过率 ${data.stats.approval_rate}% | 平均修改 ${data.stats.avg_revisions} 次\n` +
-      (data.badges.length > 0 ? `🏅 成就：${data.badges.map(b => b.name).join('、')}\n` : '') +
       `📌 奕诺·服务进度存证管家 — 让每一次交付都有据可查\n` +
       `🔗 ${reputationUrl}`
     : '';
@@ -211,24 +210,7 @@ export default function SellerReputationPage() {
             </div>
           </div>
 
-          {/* Badges */}
-          {data.badges.length > 0 && (
-            <div>
-              <div className="text-sm font-bold text-stone-700 mb-2">成就徽章</div>
-              <div className="flex flex-wrap gap-2">
-                {data.badges.map((badge) => (
-                  <div
-                    key={badge.key}
-                    className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-orange-50 border border-indigo-200 rounded-full px-3 py-1.5"
-                    title={badge.description}
-                  >
-                    <span className="text-base">{badge.icon}</span>
-                    <span className="text-sm font-medium text-indigo-800">{badge.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Badges - hidden per design update */}
 
           {/* Recent Activity */}
           {data.recent_activity.length > 0 && (

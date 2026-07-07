@@ -1,29 +1,36 @@
 /**
- * @file 买家查询页
+ * @file 买家查询页 - 深色科技风格
  * @description
  * 买家通过SV编号查询服务单进度，无需登录。
- * 已登录买家可使用高级功能：优先审核、专业交付报告、进度卡片。
- * 节点4（初稿完成）时买家可审核：通过→推进到节点5，驳回→回退到节点3。
+ * 集成物流时间线、节点交互、进展记录。
  *
  * 路由：/buyer
  * API：GET /api/buyer/[orderNo]，POST /api/orders/[id]/review
  */
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect, useCallback } from 'react';
+import { LogisticsTimeline } from '@/components/service/logistics-timeline';
+import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import Link from 'next/link';
+  Search,
+  Package,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Sparkles,
+  Shield,
+  Clock,
+  Eye,
+  AlertTriangle,
+  ChevronRight,
+  Truck,
+  ClipboardCheck,
+  Edit,
+  PartyPopper,
+  CheckCircle2,
+  Send,
+} from 'lucide-react';
 
 const NODE_LABELS: Record<number, string> = {
   1: '订单接收',
@@ -34,6 +41,16 @@ const NODE_LABELS: Record<number, string> = {
   6: '终稿已交付',
   7: '确认完成',
 };
+
+const SERVICE_NODES = [
+  { id: 1, name: '下单支付', icon: Package, gradient: 'from-blue-500 to-cyan-400' },
+  { id: 2, name: '需求确认', icon: ClipboardCheck, gradient: 'from-indigo-500 to-blue-400' },
+  { id: 3, name: '制作中', icon: Truck, gradient: 'from-violet-500 to-indigo-400' },
+  { id: 4, name: '初稿交付', icon: Send, gradient: 'from-orange-500 to-amber-400' },
+  { id: 5, name: '修改调整', icon: Edit, gradient: 'from-amber-500 to-yellow-400' },
+  { id: 6, name: '终稿交付', icon: FileText, gradient: 'from-emerald-500 to-green-400' },
+  { id: 7, name: '确认收货', icon: CheckCircle2, gradient: 'from-green-500 to-emerald-400' },
+];
 
 interface OrderInfo {
   id: string;
@@ -54,49 +71,108 @@ interface LogInfo {
   created_at: string;
 }
 
+interface ProgressItem {
+  id: string;
+  node_index: number;
+  sub_node_index?: number;
+  title: string;
+  description?: string;
+  image_urls?: string[];
+  operator_type: string;
+  is_virtual: boolean;
+  created_at: string;
+}
+
+// Transform logs into progress items for timeline
+function transformLogsToProgress(logs: LogInfo[], currentNode: number): ProgressItem[] {
+  const items: ProgressItem[] = [];
+
+  // Add virtual node for current status
+  const currentNodeDef = SERVICE_NODES.find((n) => n.id === currentNode);
+  if (currentNodeDef) {
+    items.push({
+      id: 'virtual-current',
+      node_index: currentNode,
+      title: `当前：${currentNodeDef.name}`,
+      description: currentNode === 4 ? '等待买家审核初稿' : currentNode >= 6 ? '交付已完成' : '卖家正在处理中',
+      operator_type: 'system',
+      is_virtual: true,
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  // Transform logs
+  logs.forEach((log, idx) => {
+    let title = '';
+    let description = '';
+
+    if (log.action === 'advance') {
+      title = `推进到${NODE_LABELS[log.node] || `节点${log.node}`}`;
+      description = '卖家更新了服务进度';
+    } else if (log.action === 'approve') {
+      title = '买家审核通过';
+      description = '初稿审核通过，继续推进终稿输出';
+    } else if (log.action === 'reject') {
+      title = '买家驳回修改';
+      description = log.rejection_reason || '初稿需要修改';
+    } else if (log.action === 'create') {
+      title = '订单已创建';
+      description = '买家已下单，等待卖家接收';
+    }
+
+    if (title) {
+      items.push({
+        id: `log-${idx}`,
+        node_index: log.node,
+        title,
+        description,
+        operator_type: log.operator_type,
+        is_virtual: false,
+        created_at: log.created_at,
+      });
+    }
+  });
+
+  return items;
+}
+
 export default function BuyerPage() {
   const [orderNo, setOrderNo] = useState('');
   const [order, setOrder] = useState<OrderInfo | null>(null);
   const [logs, setLogs] = useState<LogInfo[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showReview, setShowReview] = useState(false);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [addonError, setAddonError] = useState('');
-  const [addonContactModal, setAddonContactModal] = useState(false);
-  const [user, setUser] = useState<{ userId: string; role: string } | null>(null);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [progressRefreshKey, setProgressRefreshKey] = useState(0);
 
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then((r) => r.json())
-      .then((d) => { if (d.user) setUser(d.user); })
-      .catch(() => {});
-  }, []);
-
-  const handleQuery = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orderNo.trim()) return;
-    setLoading(true);
-    setError('');
-    setOrder(null);
-    setLogs([]);
-    try {
-      const res = await fetch(`/api/buyer/${orderNo.trim()}`);
-      const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setOrder(data.order);
-        setLogs(data.logs || []);
+  const handleQuery = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      if (!orderNo.trim()) return;
+      setLoading(true);
+      setError('');
+      setOrder(null);
+      setLogs([]);
+      try {
+        const res = await fetch(`/api/buyer/${orderNo.trim()}`);
+        const data = await res.json();
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setOrder(data.order);
+          setLogs(data.logs || []);
+        }
+      } catch {
+        setError('查询失败，请检查网络');
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setError('查询失败，请检查网络');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [orderNo]
+  );
 
   const handleReview = async () => {
     if (!order || !reviewAction) return;
@@ -104,6 +180,7 @@ export default function BuyerPage() {
       alert('请填写修改意见');
       return;
     }
+    setReviewLoading(true);
     try {
       const res = await fetch(`/api/orders/${order.id}/review`, {
         method: 'POST',
@@ -118,304 +195,434 @@ export default function BuyerPage() {
         alert(data.error);
       } else {
         alert(data.message);
-        setShowReview(false);
         setReviewAction(null);
         setRejectionReason('');
+        setShowRejectInput(false);
         // Re-query
-        handleQuery({ preventDefault: () => {} } as React.FormEvent);
+        await handleQuery();
+        setProgressRefreshKey((k) => k + 1);
       }
     } catch {
       alert('操作失败');
+    } finally {
+      setReviewLoading(false);
     }
   };
 
-  const handleAddon = async (addonType: string) => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-    if (!order) return;
-    try {
-      const res = await fetch('/api/buyer-addons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: order.id, addon_type: addonType }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        if (data.needPermission) {
-          setAddonContactModal(true);
-        } else {
-          setAddonError(data.error);
-        }
-      } else {
-        alert(data.message);
-      }
-    } catch {
-      setAddonError('操作失败');
-    }
-  };
+  const progress = order ? transformLogsToProgress(logs, order.current_node) : [];
+  const currentNodeDef = order
+    ? SERVICE_NODES.find((n) => n.id === order.current_node)
+    : null;
+  const CurrentIcon = currentNodeDef?.icon || Package;
 
   return (
-    <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-br from-slate-50 via-indigo-50/40 to-white">
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
-        <Card className="border-0 shadow-lg card-gradient-subtle">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-indigo-800">查询服务进度</CardTitle>
-            <p className="text-stone-500 text-sm">输入卖家提供的SV编号，查看交付进度</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleQuery} className="flex gap-3">
-              <Input
+    <div className="min-h-screen bg-[#0a0e1a] pb-20">
+      {/* Background gradient effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
+        {/* Query Section */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-medium mb-4">
+            <Shield size={14} />
+            全程可溯 · 交付可验
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">查询服务进度</h1>
+          <p className="text-slate-400 text-sm">
+            输入卖家提供的SV编号，实时查看交付进度
+          </p>
+        </div>
+
+        {/* Search Box */}
+        <div className="bg-[#0f1629]/90 backdrop-blur-xl border border-[#2a3a5f] rounded-2xl p-6 mb-8 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5" />
+          <form onSubmit={handleQuery} className="relative flex gap-3">
+            <div className="flex-1 relative">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              />
+              <input
+                type="text"
                 placeholder="请输入SV编号，如 SV240101ABC123"
                 value={orderNo}
                 onChange={(e) => setOrderNo(e.target.value)}
-                className="font-mono tabular-nums"
+                className="w-full bg-[#0a0e1a] border border-[#2a3a5f] rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-500 font-mono text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all"
               />
-              <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
-                {loading ? '查询中...' : '查询'}
-              </Button>
-            </form>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-violet-600 rounded-xl text-white font-medium text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Search size={16} />
+              )}
+              {loading ? '查询中...' : '查询'}
+            </button>
+          </form>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg mt-4">
-                {error}
-              </div>
-            )}
-
-            {order && (
-              <div className="mt-6 space-y-4">
-                <div className="bg-white rounded-xl border border-stone-200 p-5 card-gradient-subtle">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="font-mono text-indigo-700 font-bold tabular-nums">{order.order_no}</span>
-                    <Badge className={
-                      order.current_node === 7 ? 'bg-emerald-100 text-emerald-700 border-0' :
-                      order.current_node === 4 ? 'bg-orange-100 text-orange-700 border-0' :
-                      'bg-indigo-100 text-indigo-700 border-0'
-                    }>
-                      {NODE_LABELS[order.current_node]}
-                    </Badge>
-                  </div>
-                  <div className="text-sm text-stone-500 space-y-1">
-                    <p>买家：{order.buyer_nickname}</p>
-                    <p>服务类型：{order.service_type}</p>
-                    <p>服务内容：{order.service_content}</p>
-                    <p>创建时间：{new Date(order.created_at).toLocaleString('zh-CN')}</p>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="mt-4">
-                    <div className="flex items-center gap-1.5">
-                      {Array.from({ length: 7 }, (_, i) => {
-                        const node = i + 1;
-                        const filled = node <= order.current_node;
-                        return (
-                          <div key={node} className="flex items-center gap-1.5">
-                            <div
-                              className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                                filled
-                                  ? 'bg-indigo-600 text-white shadow-sm'
-                                  : 'bg-stone-200 text-stone-400'
-                              } ${filled && node === order.current_node ? 'ring-2 ring-indigo-400 ring-offset-1' : ''}`}
-                            >
-                              {filled ? '■' : '□'}
-                            </div>
-                            {node < 7 && (
-                              <div className={`w-4 h-0.5 ${filled && node < order.current_node ? 'bg-indigo-600' : 'bg-stone-200'}`} />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      {Array.from({ length: 7 }, (_, i) => (
-                        <span key={i} className="text-[10px] text-stone-400 w-8 text-center">
-                          {i + 1}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Node labels */}
-                  <div className="mt-3 space-y-1">
-                    {Array.from({ length: 7 }, (_, i) => i + 1).map((node) => (
-                      <div key={node} className="flex items-center gap-2">
-                        <span className={`w-4 h-4 rounded text-xs flex items-center justify-center ${node <= order.current_node ? 'bg-indigo-600 text-white' : 'bg-stone-200 text-stone-400'}`}>
-                          {node}
-                        </span>
-                        <span className={`text-xs ${node <= order.current_node ? 'text-stone-800 font-medium' : 'text-stone-400'}`}>
-                          {NODE_LABELS[node]}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Review section - only when at node 4 */}
-                {order.current_node === 4 && (
-                  <Card className="border-orange-200 bg-orange-50 shadow-sm">
-                    <CardContent className="p-4">
-                      <p className="font-semibold text-orange-800 mb-3">初稿已完成，请审核</p>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={() => { setReviewAction('approve'); setShowReview(true); }}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        >
-                          审核通过
-                        </Button>
-                        <Button
-                          onClick={() => { setReviewAction('reject'); setShowReview(true); }}
-                          variant="destructive"
-                        >
-                          驳回修改
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Progress logs */}
-                {logs.length > 0 && (
-                  <div className="bg-white rounded-xl border border-stone-200 p-5">
-                    <h3 className="font-semibold text-stone-800 mb-3">操作记录</h3>
-                    <div className="space-y-2">
-                      {logs.map((log, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-sm">
-                          <span className="text-stone-400 shrink-0 tabular-nums">
-                            {new Date(log.created_at).toLocaleString('zh-CN')}
-                          </span>
-                          <span className={
-                            log.action === 'reject' ? 'text-red-600' :
-                            log.action === 'approve' ? 'text-emerald-600' :
-                            'text-stone-600'
-                          }>
-                            {log.action === 'advance' && `推进到节点${log.node}`}
-                            {log.action === 'approve' && '买家审核通过'}
-                            {log.action === 'reject' && `买家驳回（退回节点${log.node}）`}
-                          </span>
-                          {log.rejection_reason && (
-                            <span className="text-red-500 text-xs">原因：{log.rejection_reason}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Buyer add-ons */}
-                <div className="bg-white rounded-xl border border-stone-200 p-5">
-                  <h3 className="font-semibold text-stone-800 mb-3">高级功能</h3>
-                  {addonError && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-2 rounded-lg mb-3">
-                      {addonError}
-                    </div>
-                  )}
-                  <div className="grid grid-cols-3 gap-3">
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex flex-col items-center gap-1 border-indigo-200 hover:bg-indigo-50"
-                      onClick={() => handleAddon('urgent_review')}
-                    >
-                      <span className="font-semibold text-indigo-800">优先审核</span>
-                      <span className="text-indigo-600 text-xs">9.9元</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex flex-col items-center gap-1 border-indigo-200 hover:bg-indigo-50"
-                      onClick={() => handleAddon('delivery_cert')}
-                    >
-                      <span className="font-semibold text-indigo-800">专业交付报告</span>
-                      <span className="text-indigo-600 text-xs">19.9元</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex flex-col items-center gap-1 border-indigo-200 hover:bg-indigo-50"
-                      onClick={() => handleAddon('share_card')}
-                    >
-                      <span className="font-semibold text-indigo-800">进度卡片生成</span>
-                      <span className="text-indigo-600 text-xs">3.9元</span>
-                    </Button>
-                  </div>
-                  <p className="text-xs text-stone-400 mt-2">* 测试模式下支付将模拟成功</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-
-      {/* Review Dialog */}
-      <Dialog open={showReview} onOpenChange={setShowReview}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-indigo-800">
-              {reviewAction === 'approve' ? '确认审核通过' : '驳回修改'}
-            </DialogTitle>
-          </DialogHeader>
-          {reviewAction === 'reject' && (
-            <div>
-              <Label>修改意见</Label>
-              <Textarea
-                placeholder="请详细说明需要修改的内容"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                className="mt-1"
-                rows={4}
-              />
-              <p className="text-xs text-stone-400 mt-1">驳回后进度将回退到&ldquo;制作中&rdquo;</p>
+          {error && (
+            <div className="relative mt-4 flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+              <AlertTriangle size={16} />
+              {error}
             </div>
           )}
-          {reviewAction === 'approve' && (
-            <p className="text-sm text-stone-600">确认审核通过后，卖家将继续推进终稿输出</p>
-          )}
-          <div className="flex gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowReview(false)} className="flex-1">取消</Button>
-            <Button
-              onClick={handleReview}
-              className={`flex-1 ${
-                reviewAction === 'approve'
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
-              }`}
-            >
-              确认{reviewAction === 'approve' ? '通过' : '驳回'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
 
-      {/* Login Prompt Dialog */}
-      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-indigo-800">请先登录</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-stone-600">使用高级功能需要登录账号</p>
-          <div className="flex gap-3 mt-4">
-            <Link href="/" className="flex-1">
-              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">去登录/注册</Button>
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
+        {/* Results */}
+        {order && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Current Status Card */}
+            <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5" />
+              <div className="relative">
+                <div className="flex items-center gap-4 mb-4">
+                  <div
+                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${currentNodeDef?.gradient || 'from-blue-500 to-cyan-400'} flex items-center justify-center shadow-lg ${order.current_node === 4 ? 'node-pulse' : ''}`}
+                  >
+                    <CurrentIcon className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-400">当前状态</p>
+                    <p className="text-xl font-bold text-white">
+                      {NODE_LABELS[order.current_node]}
+                    </p>
+                    {order.current_node === 4 && (
+                      <p className="text-sm text-orange-400 mt-0.5">
+                        需要您审核初稿
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono text-blue-400 font-bold text-sm">
+                      {order.order_no}
+                    </span>
+                    <p className="text-xs text-slate-500 mt-1">
+                      第{order.current_node}步 / 共7步
+                    </p>
+                  </div>
+                </div>
 
-      {/* Addon Contact Dialog */}
-      <Dialog open={addonContactModal} onOpenChange={setAddonContactModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-indigo-800">功能未开通</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-stone-600">此功能需联系客服开通，请联系获取使用权限。</p>
-          <div className="bg-indigo-50 rounded-lg p-3 mt-2 text-sm text-indigo-800">
-            <p>客服电话：400-888-9999</p>
-            <p>客服邮箱：support@yinuo.com</p>
-            <p>工作时间：周一至周五 9:00-18:00</p>
+                {/* Order info grid */}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#2a3a5f]/50">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">买家</p>
+                    <p className="text-sm text-slate-300">
+                      {order.buyer_nickname}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">服务类型</p>
+                    <p className="text-sm text-slate-300">
+                      {order.service_type}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">预计交付</p>
+                    <p className="text-sm text-slate-300">
+                      {order.estimated_delivery || '未设置'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">创建时间</p>
+                    <p className="text-sm text-slate-300">
+                      {new Date(order.created_at).toLocaleDateString('zh-CN')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Timeline */}
+            <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Sparkles size={20} className="text-blue-400" />
+                <h2 className="text-lg font-bold text-white">进展时间线</h2>
+              </div>
+              <LogisticsTimeline
+                progress={progress}
+                currentNode={order.current_node}
+              />
+            </div>
+
+            {/* Node-specific interactions */}
+
+            {/* Node 1-2: Payment upload area */}
+            {order.current_node <= 2 && (
+              <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Package size={20} className="text-cyan-400" />
+                  <h2 className="text-lg font-bold text-white">上传付款凭证</h2>
+                </div>
+                <p className="text-sm text-slate-400 mb-4">
+                  请上传您的付款截图，方便卖家确认订单并开始制作
+                </p>
+                <ServiceProgressHistory
+                  orderId={order.id}
+                  refreshKey={progressRefreshKey}
+                />
+              </div>
+            )}
+
+            {/* Node 3: View progress (制作中) */}
+            {order.current_node === 3 && (
+              <div className="space-y-6">
+                <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Truck size={20} className="text-violet-400" />
+                    <h2 className="text-lg font-bold text-white">制作进展</h2>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-4">
+                    卖家正在为您制作中，以下是最新进展记录
+                  </p>
+                  <ServiceProgressHistory
+                    orderId={order.id}
+                    refreshKey={progressRefreshKey}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Node 4: Review area (初稿审核) */}
+            {order.current_node === 4 && (
+              <div className="space-y-6">
+                {/* Seller's submission */}
+                <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-orange-500/20 p-6 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-amber-500/5" />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Eye size={20} className="text-orange-400" />
+                      <h2 className="text-lg font-bold text-white">
+                        初稿已提交，请审核
+                      </h2>
+                    </div>
+                    <p className="text-sm text-slate-400 mb-4">
+                      卖家已完成初稿，请查看以下内容并进行审核
+                    </p>
+
+                    {/* Show progress entries with attachments */}
+                    <ServiceProgressHistory
+                      orderId={order.id}
+                      refreshKey={progressRefreshKey}
+                    />
+                  </div>
+                </div>
+
+                {/* Review actions */}
+                <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckCircle size={20} className="text-emerald-400" />
+                    <h2 className="text-lg font-bold text-white">审核操作</h2>
+                  </div>
+
+                  {!reviewAction && !showRejectInput && (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setReviewAction('approve');
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl text-white font-medium shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
+                      >
+                        <CheckCircle size={18} />
+                        审核通过
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReviewAction('reject');
+                          setShowRejectInput(true);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 rounded-xl text-white font-medium shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all"
+                      >
+                        <XCircle size={18} />
+                        驳回修改
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Approve confirmation */}
+                  {reviewAction === 'approve' && (
+                    <div className="space-y-4">
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                        <p className="text-sm text-emerald-400">
+                          确认审核通过后，卖家将继续推进终稿输出。请确认您已查看初稿内容。
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setReviewAction(null)}
+                          className="flex-1 px-4 py-2.5 bg-[#1a2540] border border-[#2a3a5f] rounded-xl text-slate-300 text-sm hover:bg-[#2a3a5f] transition-colors"
+                        >
+                          取消
+                        </button>
+                        <button
+                          onClick={handleReview}
+                          disabled={reviewLoading}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl text-white text-sm font-medium disabled:opacity-50 transition-all"
+                        >
+                          {reviewLoading ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <CheckCircle size={16} />
+                          )}
+                          确认通过
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reject with reason */}
+                  {reviewAction === 'reject' && showRejectInput && (
+                    <div className="space-y-4">
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                        <p className="text-sm text-red-400 mb-3">
+                          驳回后进度将回退到「制作中」，请填写修改意见
+                        </p>
+                        <textarea
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder="请详细说明需要修改的内容..."
+                          rows={4}
+                          className="w-full bg-[#0a0e1a] border border-[#2a3a5f] rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20"
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            setReviewAction(null);
+                            setShowRejectInput(false);
+                            setRejectionReason('');
+                          }}
+                          className="flex-1 px-4 py-2.5 bg-[#1a2540] border border-[#2a3a5f] rounded-xl text-slate-300 text-sm hover:bg-[#2a3a5f] transition-colors"
+                        >
+                          取消
+                        </button>
+                        <button
+                          onClick={handleReview}
+                          disabled={reviewLoading || !rejectionReason.trim()}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 rounded-xl text-white text-sm font-medium disabled:opacity-50 transition-all"
+                        >
+                          {reviewLoading ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <XCircle size={16} />
+                          )}
+                          确认驳回
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Node 5-7: Delivery/completion */}
+            {order.current_node >= 5 && (
+              <div className="space-y-6">
+                <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-emerald-500/20 p-6 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-green-500/5" />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-4">
+                      <PartyPopper size={20} className="text-emerald-400" />
+                      <h2 className="text-lg font-bold text-white">
+                        {order.current_node >= 6 ? '交付完成' : '终稿输出'}
+                      </h2>
+                    </div>
+                    <p className="text-sm text-slate-400 mb-4">
+                      {order.current_node >= 7
+                        ? '订单已完成，感谢您的信任'
+                        : order.current_node >= 6
+                          ? '终稿已交付，请确认收货'
+                          : '终稿已输出，请查收'}
+                    </p>
+
+                    {/* Delivery files */}
+                    <ServiceProgressHistory
+                      orderId={order.id}
+                      refreshKey={progressRefreshKey}
+                    />
+
+                    {/* Delivery report link */}
+                    {order.current_node >= 6 && (
+                      <div className="mt-4 pt-4 border-t border-[#2a3a5f]/50">
+                        <a
+                          href={`/verify/${order.id}`}
+                          className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          <FileText size={16} />
+                          查看交付报告
+                          <ChevronRight size={14} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Service Content */}
+            <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText size={20} className="text-slate-400" />
+                <h2 className="text-lg font-bold text-white">服务内容</h2>
+              </div>
+              <div className="bg-[#0a0e1a] rounded-xl p-4 border border-[#2a3a5f]/50">
+                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  {order.service_content}
+                </p>
+              </div>
+            </div>
+
+            {/* Operation Logs */}
+            {logs.length > 0 && (
+              <div className="bg-[#0f1629]/90 backdrop-blur-xl rounded-2xl border border-[#2a3a5f] p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock size={20} className="text-slate-400" />
+                  <h2 className="text-lg font-bold text-white">操作记录</h2>
+                </div>
+                <div className="space-y-2">
+                  {logs.map((log, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 text-sm py-2 border-b border-[#2a3a5f]/30 last:border-0"
+                    >
+                      <span className="text-slate-500 shrink-0 font-mono text-xs mt-0.5">
+                        {new Date(log.created_at).toLocaleString('zh-CN')}
+                      </span>
+                      <span
+                        className={
+                          log.action === 'reject'
+                            ? 'text-red-400'
+                            : log.action === 'approve'
+                              ? 'text-emerald-400'
+                              : 'text-slate-300'
+                        }
+                      >
+                        {log.action === 'advance' &&
+                          `推进到${NODE_LABELS[log.node] || `节点${log.node}`}`}
+                        {log.action === 'approve' && '买家审核通过'}
+                        {log.action === 'reject' &&
+                          `买家驳回（退回${NODE_LABELS[log.node] || `节点${log.node}`}）`}
+                        {log.action === 'create' && '订单创建'}
+                      </span>
+                      {log.rejection_reason && (
+                        <span className="text-red-400/70 text-xs">
+                          原因：{log.rejection_reason}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex gap-3 mt-4">
-            <Button variant="outline" onClick={() => setAddonContactModal(false)} className="flex-1">关闭</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </div>
     </div>
   );
 }
