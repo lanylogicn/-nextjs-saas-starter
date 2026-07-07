@@ -1632,7 +1632,7 @@ export default function AdminPage() {
       <aside className={`fixed inset-y-0 left-0 z-40 w-60 bg-stone-900 text-stone-300 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Brand */}
         <div className="h-16 flex items-center px-5 border-b border-stone-800">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm mr-3">奕</div>
+          <img src="/logo-yinuo.png" alt="奕諾" className="h-8 w-auto rounded-lg mr-3" />
           <div>
             <p className="text-white font-bold text-sm">奕諾</p>
             <p className="text-stone-500 text-xs">后台管理系统</p>

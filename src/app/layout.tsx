@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   title: '奕諾-服务进度存证管家',
   description: '闲鱼卖家与买家的服务交付进度管理工具，支持进度追踪、审核确认、存证管理',
   keywords: ['奕諾', '服务进度', '交付管理', '闲鱼工具', '存证管家'],
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
