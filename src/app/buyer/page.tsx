@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { LogisticsTimeline } from '@/components/service/logistics-timeline';
+import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
 import { ServiceProgressHistory } from '@/components/ServiceProgressHistory';
 import {
   Search,
@@ -363,6 +364,11 @@ export default function BuyerPage() {
                 <p className="text-sm text-slate-400 mb-4">
                   请上传您的付款截图，方便卖家确认订单并开始制作
                 </p>
+                <ServiceProgressEntry
+                  orderId={order.id}
+                  currentNodeIndex={Math.max(0, order.current_node - 1)}
+                  onEntryAdded={() => setProgressRefreshKey((k) => k + 1)}
+                />
                 <ServiceProgressHistory
                   orderId={order.id}
                   refreshKey={progressRefreshKey}

@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { LogisticsTimeline } from '@/components/service/logistics-timeline';
 import { ServiceProgressEntry } from '@/components/ServiceProgressEntry';
@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   AlertCircle,
   CheckCircle2,
+  ChevronRight,
 } from 'lucide-react';
 
 // 7个服务节点定义
@@ -33,6 +34,25 @@ const SERVICE_NODES = [
   { id: 6, name: '终稿交付', icon: FileText, gradient: 'from-emerald-500 to-green-400' },
   { id: 7, name: '确认收货', icon: CheckCircle2, gradient: 'from-green-500 to-emerald-400' },
 ];
+
+const NODE_LABELS: Record<number, string> = {
+  1: '订单接收',
+  2: '需求梳理',
+  3: '制作中',
+  4: '初稿完成，等待客户审核',
+  5: '审核通过，终稿输出',
+  6: '终稿已交付',
+  7: '确认完成',
+};
+
+interface LogInfo {
+  id: string;
+  node: number;
+  action: string;
+  operator_type: string;
+  rejection_reason: string;
+  created_at: string;
+}
 
 interface ProgressItem {
   id: string;
@@ -59,68 +79,60 @@ interface Order {
   updated_at: string;
   amount?: number;
   price?: number;
+  category?: string;
 }
 
-// 模拟数据
-const MOCK_ORDER: Order = {
-  id: '1',
-  order_no: 'SV20240101001',
-  seller_id: 'seller1',
-  buyer_nickname: '买家小明',
-  service_type: 'ppt',
-  service_content: '制作一份关于人工智能发展趋势的PPT，约20页，需要包含数据图表和案例分析。',
-  current_node: 3,
-  estimated_delivery: '2024-01-15',
-  created_at: '2024-01-01T10:00:00Z',
-  updated_at: '2024-01-05T14:30:00Z',
-  amount: 50000,
-};
+// Transform logs into progress items for timeline
+function transformLogsToProgress(logs: LogInfo[], currentNode: number): ProgressItem[] {
+  const items: ProgressItem[] = [];
 
-const MOCK_PROGRESS: ProgressItem[] = [
-  {
-    id: 'p1',
-    node_index: 3,
-    sub_node_index: 2,
-    title: '完成框架设计',
-    description: '已完成PPT整体框架设计，包含封面、目录、5个主要章节、总结页。每个章节都规划了内容要点和视觉风格。',
-    image_urls: ['/placeholder-framework.png'],
-    operator_type: 'seller',
-    is_virtual: false,
-    created_at: '2024-01-05T14:30:00Z',
-  },
-  {
-    id: 'p2',
-    node_index: 3,
-    sub_node_index: 1,
-    title: '开始内容制作',
-    description: '根据确认的需求文档，开始进行PPT内容制作。',
-    operator_type: 'seller',
-    is_virtual: true,
-    created_at: '2024-01-04T10:00:00Z',
-  },
-  {
-    id: 'p3',
-    node_index: 2,
-    title: '需求已确认',
-    description: '已详细阅读并确认所有需求，将按以下要点制作：1. 专业商务风格 2. 包含数据图表 3. 20页左右',
-    operator_type: 'seller',
-    is_virtual: false,
-    created_at: '2024-01-03T09:00:00Z',
-  },
-  {
-    id: 'p4',
-    node_index: 1,
-    title: '订单已创建',
-    description: '买家已下单并完成支付，订单正式生效。',
-    operator_type: 'system',
-    is_virtual: false,
-    created_at: '2024-01-01T10:00:00Z',
-  },
-];
+  // Add virtual node for current status
+  const currentNodeDef = SERVICE_NODES.find((n) => n.id === currentNode);
+  if (currentNodeDef) {
+    items.push({
+      id: 'virtual-current',
+      node_index: currentNode,
+      title: `当前：${currentNodeDef.name}`,
+      description: currentNode === 4 ? '等待买家审核初稿' : currentNode >= 6 ? '交付已完成' : '卖家正在处理中',
+      operator_type: 'system',
+      is_virtual: true,
+      created_at: new Date().toISOString(),
+    });
+  }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  // Transform logs
+  logs.forEach((log, idx) => {
+    let title = '';
+    let description = '';
+
+    if (log.action === 'advance') {
+      title = `推进到${NODE_LABELS[log.node] || `节点${log.node}`}`;
+      description = '卖家更新了服务进度';
+    } else if (log.action === 'approve') {
+      title = '买家审核通过';
+      description = '初稿审核通过，继续推进终稿输出';
+    } else if (log.action === 'reject') {
+      title = '买家驳回修改';
+      description = log.rejection_reason || '初稿需要修改';
+    } else if (log.action === 'create') {
+      title = '订单已创建';
+      description = '买家已下单，等待卖家接收';
+    }
+
+    if (title) {
+      items.push({
+        id: `log-${idx}`,
+        node_index: log.node,
+        title,
+        description,
+        operator_type: log.operator_type,
+        is_virtual: false,
+        created_at: log.created_at,
+      });
+    }
+  });
+
+  return items;
 }
 
 export default function OrderDetailPage() {
@@ -129,16 +141,50 @@ export default function OrderDetailPage() {
   const orderId = params.id as string;
 
   const [order, setOrder] = useState<Order | null>(null);
-  const [progress, setProgress] = useState<ProgressItem[]>([]);
+  const [logs, setLogs] = useState<LogInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [progressRefreshKey, setProgressRefreshKey] = useState(0);
+  const [advancing, setAdvancing] = useState(false);
+
+  const fetchOrder = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      const data = await res.json();
+      if (data.error) {
+        setOrder(null);
+      } else {
+        setOrder(data.order);
+        setLogs(data.logs || []);
+      }
+    } catch {
+      setOrder(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId]);
 
   useEffect(() => {
-    // 使用模拟数据
-    setOrder(MOCK_ORDER);
-    setProgress(MOCK_PROGRESS);
-    setLoading(false);
-  }, [orderId]);
+    fetchOrder();
+  }, [fetchOrder]);
+
+  const handleAdvance = async () => {
+    if (!order) return;
+    setAdvancing(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: 'PUT' });
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        await fetchOrder();
+        setProgressRefreshKey((k) => k + 1);
+      }
+    } catch {
+      alert('操作失败');
+    } finally {
+      setAdvancing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -163,6 +209,7 @@ export default function OrderDetailPage() {
 
   const currentNode = SERVICE_NODES.find(n => n.id === order.current_node);
   const CurrentIcon = currentNode?.icon || Package;
+  const progress = transformLogsToProgress(logs, order.current_node);
 
   return (
     <div className="min-h-screen bg-slate-950 pb-20">
@@ -188,9 +235,9 @@ export default function OrderDetailPage() {
               </p>
             </div>
             <div className="text-right">
-              {order.amount && (
+              {(order.amount || order.price) && (
                 <p className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent font-mono">
-                  ¥{(order.amount / 100).toFixed(2)}
+                  ¥{((order.amount || order.price || 0) / 100).toFixed(2)}
                 </p>
               )}
             </div>
@@ -201,7 +248,6 @@ export default function OrderDetailPage() {
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Current Status Card */}
         <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-800/50 p-6 mb-6 relative overflow-hidden">
-          {/* Gradient background effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5" />
           <div className="relative">
             <div className="flex items-center gap-4 mb-4">
@@ -210,8 +256,10 @@ export default function OrderDetailPage() {
               </div>
               <div>
                 <p className="text-sm text-slate-400">当前状态</p>
-                <p className="text-xl font-bold text-white">{currentNode?.name}</p>
-                <p className="text-sm text-slate-400">{currentNode?.name === '制作中' ? '卖家正在制作中' : ''}</p>
+                <p className="text-xl font-bold text-white">{currentNode?.name || '未知'}</p>
+                <p className="text-sm text-slate-400">
+                  {NODE_LABELS[order.current_node] || ''}
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800/50">
@@ -228,6 +276,31 @@ export default function OrderDetailPage() {
                 </p>
               </div>
             </div>
+
+            {/* Advance button */}
+            {order.current_node < 7 && order.current_node !== 4 && (
+              <div className="mt-4 pt-4 border-t border-slate-800/50">
+                <button
+                  onClick={handleAdvance}
+                  disabled={advancing}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-violet-600 rounded-xl text-white font-medium text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 disabled:opacity-50 transition-all"
+                >
+                  {advancing ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                  {advancing ? '推进中...' : '推进到下一步'}
+                </button>
+              </div>
+            )}
+            {order.current_node === 4 && (
+              <div className="mt-4 pt-4 border-t border-slate-800/50">
+                <p className="text-sm text-orange-400 text-center">
+                  等待买家审核初稿，审核通过后才能继续推进
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -240,16 +313,19 @@ export default function OrderDetailPage() {
           <LogisticsTimeline progress={progress} currentNode={order.current_node} />
         </div>
 
-        {/* Seller Progress Entry */}
+        {/* Seller Progress Entry - 填写新进展 */}
         <div className="mb-6">
           <ServiceProgressEntry
             orderId={orderId}
             currentNodeIndex={Math.max(0, order.current_node - 1)}
-            onEntryAdded={() => setProgressRefreshKey((k) => k + 1)}
+            onEntryAdded={() => {
+              setProgressRefreshKey((k) => k + 1);
+              fetchOrder();
+            }}
           />
         </div>
 
-        {/* Progress History */}
+        {/* Progress History - 查看历史记录 */}
         <div className="mb-6">
           <ServiceProgressHistory
             orderId={orderId}

@@ -28,7 +28,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { ClipboardList, FileSearch, Crown, Download, Palette, Bell, Award, PartyPopper, Copy, Check } from 'lucide-react';
+import { ClipboardList, FileSearch, Crown, Bell, Award, PartyPopper, Copy, Check } from 'lucide-react';
 import DeliveryReportModal from '@/components/seller/DeliveryReportModal';
 import CelebrationModal from '@/components/seller/CelebrationModal';
 
@@ -705,34 +705,10 @@ export default function HomePage() {
                     <Award className="text-indigo-600" size={28} />
                   </div>
                   <h3 className="font-bold text-stone-800">我的信誉主页</h3>
-                  <p className="text-xs text-stone-500 mt-1">查看信誉名片和成就徽章</p>
+                  <p className="text-xs text-stone-500 mt-1">查看信誉数据</p>
                 </CardContent>
               </Card>
             </Link>
-
-            {(user.membership_level === 'pro' || user.membership_level === 'flagship') && (
-              <Card className="cursor-pointer hover:shadow-md transition-shadow border-indigo-100 card-gradient-subtle">
-                <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center mb-3">
-                    <Download className="text-teal-600" size={28} />
-                  </div>
-                  <h3 className="font-bold text-stone-800">导出审核记录</h3>
-                  <p className="text-xs text-stone-500 mt-1">普通版及以上可用</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {user.membership_level === 'flagship' && (
-              <Card className="cursor-pointer hover:shadow-md transition-shadow border-indigo-100 card-gradient-subtle">
-                <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 bg-pink-100 rounded-xl flex items-center justify-center mb-3">
-                    <Palette className="text-pink-600" size={28} />
-                  </div>
-                  <h3 className="font-bold text-stone-800">自定义Logo</h3>
-                  <p className="text-xs text-stone-500 mt-1">完整版专属功能</p>
-                </CardContent>
-              </Card>
-            )}
           </div>
         )}
 
